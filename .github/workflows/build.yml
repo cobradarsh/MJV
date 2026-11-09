@@ -39,8 +39,8 @@ jobs:
           test -f "$APP"
           xcrun otool -hv "$TWEAK"
           xcrun otool -hv "$APP"
-          xcrun otool -hv "$TWEAK" | grep -q ARM64E
-          xcrun otool -hv "$APP" | grep -q ARM64E
+          xcrun lipo -info "$TWEAK" | grep -q arm64e
+          xcrun lipo -info "$APP" | grep -q arm64e
           xcrun otool -D "$TWEAK" | grep -q '@loader_path/.jbroot/Library/MobileSubstrate/DynamicLibraries/OpenCamTweak.dylib'
 
       - name: Upload Debian package

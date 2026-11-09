@@ -1,0 +1,33 @@
+#!/bin/sh
+
+# Start disabled on install/upgrade. Preserve the selected video and black marker.
+rm -f /rootfs/var/mobile/Media/OpenCam/enabled 2>/dev/null || true
+
+# RootHide uses a randomized jailbreak root; do not assume /var/jb exists.
+JBROOT="$(jbroot 2>/dev/null || true)"
+if [ -n "$JBROOT" ]; then
+    mkdir -p "$JBROOT/var/mobile/OpenCam" 2>/dev/null || true
+    chown mobile:mobile "$JBROOT/var/mobile/OpenCam" 2>/dev/null || true
+    chmod 0755 "$JBROOT/var/mobile/OpenCam" 2>/dev/null || true
+fi
+
+mkdir -p /rootfs/var/mobile/Media/OpenCam 2>/dev/null || true
+chown mobile:mobile /rootfs/var/mobile/Media/OpenCam 2>/dev/null || true
+chmod 0755 /rootfs/var/mobile/Media/OpenCam 2>/dev/null || true
+
+if command -v uicache >/dev/null 2>&1; then
+    uicache -p /Applications/OpenCam.app >/dev/null 2>&1 || true
+elif [ -x /usr/bin/uicache ]; then
+    /usr/bin/uicache -p /Applications/OpenCam.app >/dev/null 2>&1 || true
+fi
+
+# launchd restarts mediaserverd. This briefly interrupts active camera use.
+if [ "${1:-}" = "configure" ]; then
+    if [ -x /usr/bin/killall ]; then
+        /usr/bin/killall -TERM mediaserverd >/dev/null 2>&1 || true
+    elif command -v killall >/dev/null 2>&1; then
+        killall -TERM mediaserverd >/dev/null 2>&1 || true
+    fi
+fi
+
+exit 0

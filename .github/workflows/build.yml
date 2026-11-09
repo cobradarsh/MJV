@@ -1,0 +1,49 @@
+name: Build RootHide package
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "**/*.m"
+      - "**/*.xm"
+      - "**/*.h"
+      - "**/Makefile"
+      - "**/control"
+      - "**/*.plist"
+      - ".github/workflows/build.yml"
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install RootHide Theos
+        run: |
+          git clone --recursive https://github.com/roothide/theos.git "$RUNNER_TEMP/roothide-theos"
+          brew list ldid >/dev/null 2>&1 || brew install ldid
+          echo "THEOS=$RUNNER_TEMP/roothide-theos" >> "$GITHUB_ENV"
+
+      - name: Build arm64e package
+        run: |
+          make clean
+          make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=roothide ARCHS=arm64e TARGET=iphone:clang:latest:16.0
+
+      - name: Verify arm64e and RootHide linkage
+        run: |
+          TWEAK=.theos/_/Library/MobileSubstrate/DynamicLibraries/OpenCamTweak.dylib
+          APP=.theos/_/Applications/OpenCam.app/OpenCam
+          test -f "$TWEAK"
+          test -f "$APP"
+          xcrun otool -hv "$TWEAK"
+          xcrun otool -hv "$APP"
+          xcrun otool -hv "$TWEAK" | grep -q ARM64E
+          xcrun otool -hv "$APP" | grep -q ARM64E
+          xcrun otool -D "$TWEAK" | grep -q '@loader_path/.jbroot/Library/MobileSubstrate/DynamicLibraries/OpenCamTweak.dylib'
+
+      - name: Upload Debian package
+        uses: actions/upload-artifact@v4
+        with:
+          name: OpenCam-RootHide-arm64e
+          path: packages/*.deb
+          if-no-files-found: error

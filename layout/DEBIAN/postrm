@@ -1,0 +1,23 @@
+#!/bin/sh
+
+if command -v uicache >/dev/null 2>&1; then
+    uicache -u /Applications/OpenCam.app >/dev/null 2>&1 || true
+elif [ -x /usr/bin/uicache ]; then
+    /usr/bin/uicache -u /Applications/OpenCam.app >/dev/null 2>&1 || true
+fi
+
+# Disable interception immediately and keep the selected video for reinstall.
+rm -f /rootfs/var/mobile/Media/OpenCam/enabled 2>/dev/null || true
+
+case "${1:-}" in
+    remove|purge)
+        # Unload the deleted dylib. This briefly interrupts active camera use.
+        if [ -x /usr/bin/killall ]; then
+            /usr/bin/killall -TERM mediaserverd >/dev/null 2>&1 || true
+        elif command -v killall >/dev/null 2>&1; then
+            killall -TERM mediaserverd >/dev/null 2>&1 || true
+        fi
+        ;;
+esac
+
+exit 0

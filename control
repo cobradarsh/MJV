@@ -1,0 +1,10 @@
+Package: com.opencam.virtualcamera
+Name: OpenCam
+Version: 1.0.0
+Architecture: iphoneos-arm64e
+Description: Free system-wide virtual camera video and black-screen replacement
+Maintainer: OpenCam contributors
+Author: OpenCam contributors
+Section: Tweaks
+Depends: mobilesubstrate, ellekit, firmware (>= 16.0)
+Pre-Depends: rootless-compat (>= 0.9)
